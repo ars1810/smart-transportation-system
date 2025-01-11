@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Route Prediction</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 0;
+        }
+
+        .form-container {
+            background-color: white;
+            margin: 20px auto;
+            padding: 20px;
+            width: 50%;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+
+        .form-container input, .form-container select {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+
+        .form-container button {
+            width: 100%;
+            padding: 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .form-container button:hover {
+            background-color: #0056b3;
+        }
+
+        #map {
+            height: 500px;
+            width: 100%;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="form-container">
+        <h1>Route Prediction</h1>
+        <form action="/predict" method="POST">
+            <label for="origin">Origin: </label>
+            <input type="text" id="origin" name="origin" placeholder="Enter the starting location" required>
+            <br>
+            <label for="destination">Destination: </label>
+            <input type="text" id="destination" name="destination" placeholder="Enter the destination location" required>
+            <br>
+            <label for="mode">Transport Mode: </label>
+            <select name="mode" id="mode">
+                <option value="car">Car</option>
+                <option value="bus">Bus</option>
+                <option value="pedestrian">Walking</option>
+            </select>
+            <br>
+            <button type="submit">Find Route</button>
+        </form>
+    </div>
+
+    <div id="map"></div>
+
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script>
+        // Initialize the map with a default global center
+        var map = L.map('map').setView([0, 0], 2); 
+
+        // Tile layer from OpenStreetMap
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        // Check if origin and destination coordinates exist
+        {% if origin_coords and destination_coords %}
+            var origin = [{{ origin_coords[0] }}, {{ origin_coords[1] }}];
+            var destination = [{{ destination_coords[0] }}, {{ destination_coords[1] }}];
+
+            // Add markers for origin and destination
+            L.marker(origin).addTo(map).bindPopup('Origin: {{ origin }}').openPopup();
+            L.marker(destination).addTo(map).bindPopup('Destination: {{ destination }}').openPopup();
+
+            // Draw the route (polyline between origin and destination)
+            var latlngs = [origin, destination];
+            var polyline = L.polyline(latlngs, {color: 'blue'}).addTo(map);
+
+            // Adjust the map view to fit the route bounds
+            map.fitBounds(polyline.getBounds());
+        {% endif %}
+    </script>
+
+</body>
+</html>
